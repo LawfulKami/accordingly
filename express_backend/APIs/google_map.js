@@ -16,16 +16,16 @@ const getMultipleTripTime = (path) => {
     })
 }
 
-const getDifferentTripTime = (from, destinations) => {
-  let formattedDests = ''
-  for (const destination of destinations) {
-    formattedDests += `|${destination.x},${destination.y}`
-  }
-  formattedDests = formattedDests.substring(1)
-  return axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${from.x},${from.y}&destinations=${formattedDests}&key=${key}&mode=walking`)
-    .then(response => response.data.rows)
-    .catch(err => err)
-}
+// const getDifferentTripTime = (from, destinations) => {
+//   let formattedDests = ''
+//   for (const destination of destinations) {
+//     formattedDests += `|${destination.x},${destination.y}`
+//   }
+//   formattedDests = formattedDests.substring(1)
+//   return axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${from.x},${from.y}&destinations=${formattedDests}&key=${key}&mode=walking`)
+//     .then(response => response.data.rows)
+//     .catch(err => err)
+// }
 
 
 const getLeaveBy = (origin, event) => {
@@ -66,9 +66,12 @@ const rawAddressToLocation = (rawAddress) => {
  return axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURI(rawAddress)}&key=${key}`)
   .then(response => {
     const { lat, lng } = response.data.results[0].geometry.location
+    const data = response.data.results[0].address_components
     return {
-     x: lat,
-     y: lng
+      street: `${data[0].short_name}, ${data[1].short_name}`,
+      city: data[3].short_name,
+      postalcode: data[7].short_name,
+      destination : { x: lat, y: lng }
     }
 })
 .catch(err => err)
@@ -77,11 +80,6 @@ const rawAddressToLocation = (rawAddress) => {
 const formatAddressForDb = (rawAddress) => {
  const formattedAddress = {};
  return rawAddressToLocation(rawAddress)
- .then(location => {
-     formattedAddress.destination = location
-     return locationToAddress(location)
-   })
-   .then(address => ({...formattedAddress, ...address}))
 }
 
 module.exports = {
